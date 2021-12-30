@@ -11,7 +11,7 @@ export class SignUpDto {
   @MaxLength(20)
   @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/, {
     message:
-      'password must contain at least one number, one letter, and one special character have minimun length of 6.',
+      'password must contain at least 1 number, 1 letter, 1 special character, and have minimun length of 6.',
   })
   password: string;
 

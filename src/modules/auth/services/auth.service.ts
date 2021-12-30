@@ -1,17 +1,22 @@
 import { VerifyCodeEntity } from './../entities/verify-code.entity';
 import {
+  AuthFailResponse,
   DuplicateResponse,
   InternalErrorResponse,
   SuccessResponse,
   WrongInputResponse,
 } from './../../../common/response.factory';
 import { SignUpDto } from './../dtos/sign-up.dto';
-import { UserEntity } from 'src/modules/user/entities/user.entity';
+import {
+  AccountStatus,
+  UserEntity,
+} from 'src/modules/user/entities/user.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Error } from 'src/constants/error.constant';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +25,8 @@ export class AuthService {
     private readonly userRepository: Repository<UserEntity>,
     @InjectRepository(VerifyCodeEntity)
     private readonly verifyCodeRepository: Repository<VerifyCodeEntity>,
+
+    private jwtService: JwtService,
   ) {}
 
   async register(payload: SignUpDto) {
@@ -51,5 +58,27 @@ export class AuthService {
         return new DuplicateResponse({ phone: payload.phone });
       return new InternalErrorResponse(payload);
     }
+  }
+
+  async login(identity: string, password: string) {
+    const user = await this.userRepository.findOne({
+      where: [{ phone: identity }, { email: identity }],
+    });
+
+    if (!user) return new AuthFailResponse({ message: 'Not Exist' });
+    if (user.status === AccountStatus.BLOCK)
+      return new AuthFailResponse({ message: 'Blocked' });
+
+    if (await bcrypt.compare(password, user.password)) {
+      const { id, phone, email, role } = user;
+      const accessToken: string = await this.jwtService.sign({
+        id,
+        phone,
+        email,
+        role,
+      });
+      return new SuccessResponse({ accessToken });
+    }
+    return new AuthFailResponse({ message: 'Wrong password' });
   }
 }
