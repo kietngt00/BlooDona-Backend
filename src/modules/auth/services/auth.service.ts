@@ -3,6 +3,7 @@ import {
   AuthFailResponse,
   DuplicateResponse,
   InternalErrorResponse,
+  NotFoundResponse,
   SuccessResponse,
   WrongInputResponse,
 } from './../../../common/response.factory';
@@ -53,10 +54,41 @@ export class AuthService {
 
       return new SuccessResponse({ verifyCode });
     } catch (error) {
-      // console.log(error);
+      console.log(error);
       if (error.code === Error.DUPLICATE)
         return new DuplicateResponse({ phone: payload.phone });
       return new InternalErrorResponse(payload);
+    }
+  }
+
+  async verifyPhone(phone: string, code: string, action: string) {
+    const record = await this.verifyCodeRepository.findOne({
+      phone,
+    });
+    if (!record) return new NotFoundResponse();
+
+    if (action === 'active') {
+      if (code !== record.code) {
+        return new AuthFailResponse({ message: 'Invalid' });
+      } else {
+        const now = +new Date();
+        const expiredTime = record.updated_at.getTime() + 0 * 60 * 1000;
+        if (now > expiredTime)
+          return new AuthFailResponse({ message: 'Expired' });
+        this.userRepository.update(
+          { phone },
+          { status: AccountStatus.ACTIVE }
+        );
+        return new SuccessResponse({ message: 'Verified' });
+      }
+    } else {
+      const now = +new Date();
+      const resendTime = record.updated_at.getTime() + 1 * 60 * 1000;
+      if (now < resendTime) return new AuthFailResponse({ message: 'Wait' });
+      record.code = Math.floor(100000 + Math.random() * 900000).toString();
+      this.verifyCodeRepository.save(record);
+      /** TODO: send SMS */
+      return new SuccessResponse({ verifyCode: record.code });
     }
   }
 

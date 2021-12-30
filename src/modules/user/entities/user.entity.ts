@@ -14,11 +14,11 @@ export enum SocialLogin {
 }
 
 export enum UserRole {
-  USER,
-  HOSPITAL,
-  BLOOD_HOSPITAL,
-  MODERATOR,
-  ADMIN,
+  USER = 'user',
+  HOSPITAL = 'hospital',
+  BLOOD_HOSPITAL = 'blood_hospital',
+  MODERATOR = 'moderator',
+  ADMIN = 'admin',
 }
 
 export enum AccountStatus {
