@@ -1,3 +1,4 @@
+import { VerifyDto } from './../dtos/verify.dto';
 import { LoginDto } from './../dtos/login.dto';
 import { SignUpDto } from './../dtos/sign-up.dto';
 import { AuthService } from '../services/auth.service';
@@ -11,6 +12,11 @@ export class AuthController {
   @Post('sign-up')
   async register(@Body() payload: SignUpDto) {
     return await this.authService.register(payload)
+  }
+
+  @Post('verify/phone')
+  async verifyPhone(@Body() payload: VerifyDto) {
+    return await this.authService.verifyPhone(payload.phone, payload.code, payload.action)
   }
 
   @Post('login')

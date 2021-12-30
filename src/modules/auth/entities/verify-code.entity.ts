@@ -1,6 +1,9 @@
+import { UserEntity } from './../../user/entities/user.entity';
 import {
   Column,
   Entity,
+  JoinColumn,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -10,7 +13,8 @@ export class VerifyCodeEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @OneToOne(() => UserEntity)
+  @JoinColumn({ referencedColumnName: "phone", name: "phone" })
   phone: string;
 
   @Column({ type: 'varchar', length: 6 })
