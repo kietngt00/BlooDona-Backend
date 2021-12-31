@@ -53,6 +53,9 @@ export class UserEntity {
 
   @Column({ type: 'enum', enum: AccountStatus, default: AccountStatus.PENDING })
   status: AccountStatus;
+  
+  @Column({ default: false })
+  email_verified: boolean;
 
   @CreateDateColumn()
   created_at: Date;

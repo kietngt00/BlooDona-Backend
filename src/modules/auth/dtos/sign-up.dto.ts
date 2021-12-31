@@ -18,3 +18,8 @@ export class SignUpDto {
   @ApiProperty()
   confirmPassword: string;
 }
+
+export class RegisterEmailDto {
+  @ApiProperty()
+  email: string;
+}
