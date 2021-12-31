@@ -13,9 +13,11 @@ export class VerifyCodeEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => UserEntity)
-  @JoinColumn({ referencedColumnName: "phone", name: "phone" })
+  @Column({ unique: true, nullable: true })
   phone: string;
+
+  @Column({ unique: true, nullable: true, type: 'varchar' })
+  email: string;
 
   @Column({ type: 'varchar', length: 6 })
   code: string;

@@ -1,6 +1,7 @@
 import { VerifyCodeEntity } from './../entities/verify-code.entity';
 import {
   AuthFailResponse,
+  BaseResponse,
   DuplicateResponse,
   InternalErrorResponse,
   NotFoundResponse,
@@ -30,6 +31,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  /** Normal user need to register via phone */
   async register(payload: SignUpDto) {
     if (payload.password !== payload.confirmPassword)
       return new WrongInputResponse({
@@ -52,7 +54,7 @@ export class AuthService {
       });
       /** TODO: send SMS */
 
-      return new SuccessResponse({ verifyCode });
+      return new SuccessResponse({ verifyCode }); // Return code for test, change latter
     } catch (error) {
       console.log(error);
       if (error.code === Error.DUPLICATE)
@@ -72,13 +74,10 @@ export class AuthService {
         return new AuthFailResponse({ message: 'Invalid' });
       } else {
         const now = +new Date();
-        const expiredTime = record.updated_at.getTime() + 0 * 60 * 1000;
+        const expiredTime = record.updated_at.getTime() + 5 * 60 * 1000;
         if (now > expiredTime)
           return new AuthFailResponse({ message: 'Expired' });
-        this.userRepository.update(
-          { phone },
-          { status: AccountStatus.ACTIVE }
-        );
+        this.userRepository.update({ phone }, { status: AccountStatus.ACTIVE });
         return new SuccessResponse({ message: 'Verified' });
       }
     } else {
@@ -88,6 +87,58 @@ export class AuthService {
       record.code = Math.floor(100000 + Math.random() * 900000).toString();
       this.verifyCodeRepository.save(record);
       /** TODO: send SMS */
+      return new SuccessResponse({ verifyCode: record.code }); // Return code for test, change latter
+    }
+  }
+
+  async registerEmail(userId: number, email: string) {
+    try {
+      await this.userRepository.update(
+        { id: userId },
+        {
+          email,
+          email_verified: false,
+        },
+      );
+      /** TODO: change insert to upsert */
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      this.verifyCodeRepository.insert({
+        email,
+        code,
+      });
+      return new SuccessResponse({ verify_code: code }); // Return code for test, change latter
+    } catch (error) {
+      // console.log(error)
+      if(error.code === 'ER_DUP_ENTRY')
+        return new DuplicateResponse({ email });
+      return new InternalErrorResponse();
+    }
+  }
+
+  async verifyEmail(email: string, code: string, action: string) {
+    const record = await this.verifyCodeRepository.findOne({
+      email,
+    });
+    if (!record) return new NotFoundResponse();
+
+    if (action === 'active') {
+      if (code !== record.code) {
+        return new AuthFailResponse({ message: 'Invalid' });
+      } else {
+        const now = +new Date();
+        const expiredTime = record.updated_at.getTime() + 5 * 60 * 1000;
+        if (now > expiredTime)
+          return new AuthFailResponse({ message: 'Expired' });
+        this.userRepository.update({ email }, { email_verified: true });
+        return new SuccessResponse({ message: 'Verified' });
+      }
+    } else {
+      const now = +new Date();
+      const resendTime = record.updated_at.getTime() + 1 * 60 * 1000;
+      if (now < resendTime) return new AuthFailResponse({ message: 'Wait' });
+      record.code = Math.floor(100000 + Math.random() * 900000).toString();
+      this.verifyCodeRepository.save(record);
+      /** TODO: send Email */
       return new SuccessResponse({ verifyCode: record.code });
     }
   }
