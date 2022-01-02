@@ -31,7 +31,6 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  /** Normal user need to register via phone */
   async register(payload: SignUpDto) {
     if (payload.password !== payload.confirmPassword)
       return new WrongInputResponse({
@@ -43,22 +42,33 @@ export class AuthService {
     const hashedPassword = bcrypt.hashSync(payload.password, salt);
     try {
       const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
-      /** TODO: change insert to upsert */
-      await this.userRepository.insert({
+      // insert new-user or update pending-user
+      let record = await this.userRepository.findOne({
         phone: payload.phone,
-        password: hashedPassword,
       });
-      this.verifyCodeRepository.insert({
-        phone: payload.phone,
-        code: verifyCode,
-      });
+      if (record?.status !== AccountStatus.PENDING)
+        return new DuplicateResponse({ phone: payload.phone });
+      if (record) {
+        record.password = hashedPassword;
+        this.userRepository.save(record);
+      } else {
+        this.userRepository.insert({
+          phone: payload.phone,
+          password: hashedPassword,
+        });
+      }
+      this.verifyCodeRepository.upsert(
+        {
+          phone: payload.phone,
+          code: verifyCode,
+        },
+        ['phone'],
+      );
       /** TODO: send SMS */
 
       return new SuccessResponse({ verifyCode }); // Return code for test, change latter
     } catch (error) {
       console.log(error);
-      if (error.code === Error.DUPLICATE)
-        return new DuplicateResponse({ phone: payload.phone });
       return new InternalErrorResponse(payload);
     }
   }
@@ -100,16 +110,19 @@ export class AuthService {
           email_verified: false,
         },
       );
-      /** TODO: change insert to upsert */
+
       const code = Math.floor(100000 + Math.random() * 900000).toString();
-      this.verifyCodeRepository.insert({
-        email,
-        code,
-      });
+      this.verifyCodeRepository.upsert(
+        {
+          email,
+          code,
+        },
+        ['email'],
+      );
       return new SuccessResponse({ verify_code: code }); // Return code for test, change latter
     } catch (error) {
       // console.log(error)
-      if(error.code === 'ER_DUP_ENTRY')
+      if (error.code === 'ER_DUP_ENTRY')
         return new DuplicateResponse({ email });
       return new InternalErrorResponse();
     }
