@@ -12,6 +12,7 @@ import { CurrentUser } from 'src/common/user.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  /** Normal user need to register via phone */
   @Post('sign-up')
   async register(@Body() payload: SignUpDto) {
     return await this.authService.register(payload);
