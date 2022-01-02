@@ -51,4 +51,29 @@ export class AuthController {
   async login(@Body() payload: LoginDto) {
     return await this.authService.login(payload.identity, payload.password);
   }
+
+  /** Send sms/email verification code */
+  @Post('password/forgot')
+  async forgotPassword() {
+
+  }
+
+  /** Verify code from client
+   *  Change password
+   * @Body: verifyCode, password, confirmPassword
+   */
+  @Post('password/reset')
+  async resetPassword(){
+
+  }
+
+  /** User change password
+   *  @Body: oldPassword, newPassword, confirmPassword
+   */
+  @UseGuards(AuthGuard())
+  @ApiBearerAuth()
+  @Post('password/change')
+  async changePassword() {
+    
+  }
 }
