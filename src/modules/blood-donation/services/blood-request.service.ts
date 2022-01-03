@@ -1,4 +1,9 @@
-import { DuplicateResponse, SuccessResponse } from './../../../common/response.factory';
+import {
+  DuplicateResponse,
+  InternalErrorResponse,
+  NotFoundResponse,
+  SuccessResponse,
+} from './../../../common/response.factory';
 import {
   BloodRequestEntity,
   UrgentLevel,
@@ -6,7 +11,10 @@ import {
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { BloodRequestMapperEntity } from '../entities/blood-request-mapper.entity';
+import {
+  BloodRequestMapperEntity,
+  DonateStatus,
+} from '../entities/blood-request-mapper.entity';
 import { BloodStationEntity } from '../entities/blood-station.entity';
 
 @Injectable()
@@ -28,24 +36,53 @@ export class BloodRequestService {
   ) {
     const activeRequest = await this.requestRepository.findOne({
       user_id: userId,
-      active: true
-    })
-    if(activeRequest)
-      return new DuplicateResponse({message: "blood-request"})
+      active: true,
+    });
+    if (activeRequest)
+      return new DuplicateResponse({ message: 'Blood-request' });
 
+    /** TODO: query user blood type */
     this.requestRepository.insert({
       user_id: userId,
       urgent_level: urgentLevel,
       expected_volume: volume,
-      description
-    })
+      description,
+      // Blood type
+    });
 
     /** TODO: send request to blood hospital */
 
     return new SuccessResponse();
   }
 
-  async sendToUsers() {
-    
+  async sendToUsers(requestId: number) {
+    /** TODO: query users from medical_info */
+
+    // hardcode data
+    const pushUserIds = [1];
+    const mapperEntities = pushUserIds.map((user_id) => {
+      return this.mapperRepository.create({
+        user_id,
+        blood_request_id: requestId,
+      });
+    });
+    this.mapperRepository.insert(mapperEntities);
+
+    /** TODO: push notification */
+    return new SuccessResponse();
+  }
+
+  async responseRequest(userId: number, requestId: number, accept: boolean) {
+    try {
+      const result = await this.mapperRepository.update(
+        { user_id: userId, blood_request_id: requestId },
+        { status: accept ? DonateStatus.ACCEPTED : DonateStatus.REJECTED },
+      );
+      if (result.affected) return new SuccessResponse();
+      return new NotFoundResponse({ message: 'Request-mapper' });
+    } catch (error) {
+      console.log(error);
+      return new InternalErrorResponse();
+    }
   }
 }

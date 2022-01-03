@@ -1,5 +1,9 @@
 import { UserEntity } from './../../user/entities/user.entity';
-import { BloodRequestDto } from './../dtos/blood-request.dto';
+import {
+  BloodRequestDto,
+  ResponseRequestDto,
+  SendRequestDto,
+} from './../dtos/blood-request.dto';
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -23,6 +27,25 @@ export class BloodRequestController {
       payload.urgentLevel,
       payload.volume,
       payload.description,
+    );
+  }
+
+  // BloodHospital Guard
+  /** @description Blood Hospital send received request to other users */
+  @Post('send-to-user')
+  async sendToUser(@Body() payload: SendRequestDto) {
+    return await this.bloodRequestService.sendToUsers(payload.requestId);
+  }
+
+  @Post('response')
+  async responseRequest(
+    @CurrentUser() user: UserEntity,
+    @Body() payload: ResponseRequestDto,
+  ) {
+    return await this.bloodRequestService.responseRequest(
+      user.id,
+      payload.requestId,
+      payload.accept,
     );
   }
 }
