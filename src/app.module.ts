@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './config';
 import { RequestMiddleware } from './request.middleware';
+import { BloodDonationModule } from './modules/blood-donation/blood-donation.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { RequestMiddleware } from './request.middleware';
 
     UserModule,
     AuthModule,
+    BloodDonationModule,
   ],
   controllers: [AppController, UserController, AuthController],
   providers: [AppService, AuthService],
