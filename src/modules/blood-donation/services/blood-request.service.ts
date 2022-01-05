@@ -99,4 +99,13 @@ export class BloodRequestService {
     });
     return new SuccessResponse(result);
   }
+
+  async inactiveRequest(user_id: number) {
+    const result = await this.requestRepository.update(
+      { user_id, active: true },
+      { active: false },
+    );
+    if(result.affected) return new SuccessResponse();
+    return new NotFoundResponse({ message: "Active-Request"});
+  }
 }

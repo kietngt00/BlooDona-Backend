@@ -4,7 +4,15 @@ import {
   ResponseRequestDto,
   SendRequestDto,
 } from './../dtos/blood-request.dto';
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { BloodRequestService } from '../services/blood-request.service';
@@ -56,5 +64,10 @@ export class BloodRequestController {
   ) {
     if (!active) return await this.bloodRequestService.getAllRequest(user.id);
     return await this.bloodRequestService.getActiveRequest(user.id);
+  }
+
+  @Put('inactive')
+  async inactiveRequest(@CurrentUser() user: UserEntity) {
+    return await this.bloodRequestService.inactiveRequest(user.id);
   }
 }
