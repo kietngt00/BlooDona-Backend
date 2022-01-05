@@ -46,7 +46,7 @@ export class AuthService {
       let record = await this.userRepository.findOne({
         phone: payload.phone,
       });
-      if (record?.status !== AccountStatus.PENDING)
+      if (record && record.status !== AccountStatus.PENDING)
         return new DuplicateResponse({ phone: payload.phone });
       if (record) {
         record.password = hashedPassword;
