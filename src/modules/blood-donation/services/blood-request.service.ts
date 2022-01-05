@@ -39,7 +39,7 @@ export class BloodRequestService {
       active: true,
     });
     if (activeRequest)
-      return new DuplicateResponse({ message: 'Blood-request' });
+      return new DuplicateResponse({ message: 'blood_request' });
 
     /** TODO: query user blood type */
     this.requestRepository.insert({
@@ -79,7 +79,7 @@ export class BloodRequestService {
         { status: accept ? DonateStatus.ACCEPTED : DonateStatus.REJECTED },
       );
       if (result.affected) return new SuccessResponse();
-      return new NotFoundResponse({ message: 'Request-mapper' });
+      return new NotFoundResponse({ message: 'request_mapper' });
     } catch (error) {
       console.log(error);
       return new InternalErrorResponse();
@@ -106,6 +106,6 @@ export class BloodRequestService {
       { active: false },
     );
     if(result.affected) return new SuccessResponse();
-    return new NotFoundResponse({ message: "Active-Request"});
+    return new NotFoundResponse({ message: "active_request"});
   }
 }
