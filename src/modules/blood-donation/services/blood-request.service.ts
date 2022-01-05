@@ -85,4 +85,18 @@ export class BloodRequestService {
       return new InternalErrorResponse();
     }
   }
+
+  async getAllRequest(user_id: number) {
+    /** TODO: pagination */
+    const results = await this.requestRepository.find({ user_id });
+    return new SuccessResponse(results);
+  }
+
+  async getActiveRequest(user_id: number) {
+    const result = await this.requestRepository.findOne({
+      user_id,
+      active: true,
+    });
+    return new SuccessResponse(result);
+  }
 }

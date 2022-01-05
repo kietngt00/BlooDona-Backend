@@ -4,7 +4,7 @@ import {
   ResponseRequestDto,
   SendRequestDto,
 } from './../dtos/blood-request.dto';
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { BloodRequestService } from '../services/blood-request.service';
@@ -47,5 +47,14 @@ export class BloodRequestController {
       payload.requestId,
       payload.accept,
     );
+  }
+
+  @Get()
+  async getAllRequests(
+    @CurrentUser() user: UserEntity,
+    @Query('active') active: boolean,
+  ) {
+    if (!active) return await this.bloodRequestService.getAllRequest(user.id);
+    return await this.bloodRequestService.getActiveRequest(user.id);
   }
 }
