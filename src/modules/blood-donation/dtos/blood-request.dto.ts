@@ -1,7 +1,6 @@
-import { BloodType } from './../entities/blood-request.entity';
+import { BloodType, UrgentLevel } from './../entities/blood-request.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDefined } from 'class-validator';
-import { UrgentLevel } from '../entities/blood-request.entity';
 
 export class BloodRequestDto {
   @IsDefined()
@@ -38,4 +37,16 @@ export class ResponseRequestDto {
   @IsDefined()
   @ApiProperty()
   accept: boolean;
+}
+
+export class EditRequestDto {
+  @ApiProperty({ enum: UrgentLevel, required: false })
+  urgentLevel: UrgentLevel;
+
+  @ApiProperty({ required: false })
+  expectedVolume: number;
+
+  @ApiProperty({ required: false })
+  active: boolean;
+
 }

@@ -104,7 +104,25 @@ export class BloodRequestService {
       { user_id, active: true },
       { active: false },
     );
-    if(result.affected) return new SuccessResponse();
-    return new NotFoundResponse({ message: "active_request"});
+    if (result.affected) return new SuccessResponse();
+    return new NotFoundResponse({ message: 'active_request' });
+  }
+
+  async editRequest(
+    requestId: number,
+    urgentLevel: UrgentLevel,
+    expectedVolume: number,
+    active: boolean,
+  ) {
+    let updateData = {};
+    if (urgentLevel) updateData['urgent_level'] = urgentLevel;
+    if (expectedVolume) updateData['expected_volume'] = expectedVolume;
+    if (active) updateData['active'] = active;
+    const result = await this.requestRepository.update(
+      { id: requestId },
+      updateData,
+    );
+    if (result.affected) return new SuccessResponse();
+    return new NotFoundResponse({ message: 'request' });
   }
 }

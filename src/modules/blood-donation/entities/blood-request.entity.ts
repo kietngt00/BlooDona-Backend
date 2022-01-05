@@ -44,6 +44,9 @@ export class BloodRequestEntity {
   @Column({ default: true })
   active: boolean;
 
+  @Column({ nullable: true })
+  expected_time: Date;
+
   @CreateDateColumn()
   created_at: Date;
 

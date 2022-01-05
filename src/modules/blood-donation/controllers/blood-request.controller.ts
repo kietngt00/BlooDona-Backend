@@ -1,6 +1,7 @@
 import { UserEntity } from './../../user/entities/user.entity';
 import {
   BloodRequestDto,
+  EditRequestDto,
   ResponseRequestDto,
   SendRequestDto,
 } from './../dtos/blood-request.dto';
@@ -69,5 +70,20 @@ export class BloodRequestController {
   @Put('inactive')
   async inactiveRequest(@CurrentUser() user: UserEntity) {
     return await this.bloodRequestService.inactiveRequest(user.id);
+  }
+
+  // BloodHospital Guard
+  /** @description Blood Hospital edit blood request */
+  @Put()
+  async editRequest(
+    @Query('request_id') requestId: number,
+    @Body() payload: EditRequestDto,
+  ) {
+    return await this.bloodRequestService.editRequest(
+      requestId,
+      payload.urgentLevel,
+      payload.expectedVolume,
+      payload.active,
+    );
   }
 }
