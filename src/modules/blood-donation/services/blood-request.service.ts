@@ -87,7 +87,6 @@ export class BloodRequestService {
   }
 
   async getAllRequest(user_id: number) {
-    /** TODO: pagination */
     const results = await this.requestRepository.find({ user_id });
     return new SuccessResponse(results);
   }
