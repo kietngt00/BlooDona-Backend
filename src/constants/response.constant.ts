@@ -1,7 +1,7 @@
 export enum Code {
   SUCCESS = 'S_001',
   INTERNAL_ERROR = 'F_001',
-  ADMIN_PROTECT = 'F_002',
+  AUTHORIZATION_PROTECT = 'F_002',
   AUTH_FAIL = 'F_003',
   WRONG_INPUT = 'F_004',
   DUPLICATE_DATA = 'F_005',
@@ -11,7 +11,7 @@ export enum Code {
 export enum Message {
   SUCCESS = 'Request successfully',
   INTERNAL_ERROR = 'Internal Server Error',
-  ADMIN_PROTECT = 'Admin Protected',
+  AUTHORIZATION_PROTECT = 'Authorization Protected',
   AUTH_FAIL = 'Authentication failed',
   WRONG_INPUT = 'Wrong Input Information',
   DUPLICATE_DATA = 'Duplicate Data',

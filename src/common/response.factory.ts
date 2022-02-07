@@ -8,7 +8,7 @@ export class BaseResponse {
 
   data: any;
 
-  constructor(status_code, status_message, data=null) {
+  constructor(status_code, status_message, data = null) {
     this.status = { status_code, status_message };
     this.data = data;
   }
@@ -50,8 +50,8 @@ export class NotFoundResponse extends BaseResponse {
   }
 }
 
-export class AdminProtectResponse extends BaseResponse {
+export class AuthorizationProtectResponse extends BaseResponse {
   constructor(data = null) {
-    super(Code.ADMIN_PROTECT, Message.ADMIN_PROTECT, data);
+    super(Code.AUTHORIZATION_PROTECT, Message.AUTHORIZATION_PROTECT, data);
   }
 }
