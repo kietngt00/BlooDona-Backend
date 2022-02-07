@@ -1,5 +1,5 @@
 import { UserEntity } from './../../user/entities/user.entity';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 export enum UrgentLevel {
   VERY_URGENT = 'very_urgent',
@@ -41,6 +41,15 @@ export class BloodRequestEntity {
   @Column({ default: 0 })
   current_volume: number;
 
+  @Column({ default: true })
+  active: boolean;
+
   @Column({ nullable: true })
-  expired_time: Date;
+  expected_time: Date;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

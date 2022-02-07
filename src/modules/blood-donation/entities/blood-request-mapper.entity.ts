@@ -1,6 +1,12 @@
 import { UserEntity } from './../../user/entities/user.entity';
 import { BloodRequestEntity } from './blood-request.entity';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { BloodStationEntity } from './blood-station.entity';
 
 export enum DonateStatus {
@@ -17,7 +23,7 @@ export class BloodRequestMapperEntity {
 
   @ManyToOne(() => UserEntity)
   @JoinColumn({ name: 'user_id' })
-  user_id: string;
+  user_id: number;
 
   @ManyToOne(() => BloodRequestEntity)
   @JoinColumn({ name: 'blood_request_id' })
@@ -26,7 +32,7 @@ export class BloodRequestMapperEntity {
   @Column({ type: 'enum', enum: DonateStatus, default: DonateStatus.PENDING })
   status: DonateStatus;
 
-  @ManyToOne(() => BloodStationEntity)
-  @JoinColumn({ name: 'blood_station_id'})
+  @ManyToOne(() => BloodStationEntity, { nullable: true })
+  @JoinColumn({ name: 'blood_station_id' })
   blood_station_id: number;
 }
