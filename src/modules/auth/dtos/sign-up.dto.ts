@@ -1,12 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { IsDefined, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class SignUpDto {
   @ApiProperty()
+  @IsDefined()
   phone: string;
 
   @ApiProperty()
-  @IsString()
+  @IsDefined()
   @MinLength(6)
   @MaxLength(20)
   @Matches(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{6,}$/, {
@@ -16,6 +17,7 @@ export class SignUpDto {
   password: string;
 
   @ApiProperty()
+  @IsDefined()
   confirmPassword: string;
 }
 

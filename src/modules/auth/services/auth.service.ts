@@ -64,6 +64,8 @@ export class AuthService {
       let record = await this.userRepository.findOne({
         phone: payload.phone,
       });
+      if (record && record.status !== AccountStatus.PENDING)
+        return new DuplicateResponse({ phone: payload.phone });
       if (record) {
         if (record?.status !== AccountStatus.PENDING)
           return new DuplicateResponse({ phone: payload.phone });
@@ -186,7 +188,8 @@ export class AuthService {
       where: [{ phone: identity }, { email: identity }],
     });
 
-    if (!user) return new AuthFailResponse({ message: 'Not Exist' });
+    if (!user || user.status === AccountStatus.PENDING)
+      return new AuthFailResponse({ message: 'Not Exist' });
     if (user.status === AccountStatus.BLOCK)
       return new AuthFailResponse({ message: 'Blocked' });
 

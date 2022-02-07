@@ -11,6 +11,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './config';
 import { RequestMiddleware } from './request.middleware';
 import { MailModule } from './modules/mail/mail.module';
+import { BloodDonationModule } from './modules/blood-donation/blood-donation.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { MailModule } from './modules/mail/mail.module';
     UserModule,
     AuthModule,
     MailModule,
+    BloodDonationModule,
   ],
   controllers: [AppController, UserController, AuthController],
   providers: [AppService, AuthService],
