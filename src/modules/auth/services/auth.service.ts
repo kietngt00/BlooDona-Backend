@@ -19,6 +19,11 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Error } from 'src/constants/error.constant';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from 'src/modules/mail/services/mail.service';
+import { VerifyDto } from '../dtos/verify.dto';
+import { ResetPasswordDto } from '../dtos/reset-pass.dto';
+import e from 'express';
+import { ChangePasswordDto } from '../dtos/change-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +34,21 @@ export class AuthService {
     private readonly verifyCodeRepository: Repository<VerifyCodeEntity>,
 
     private jwtService: JwtService,
-  ) {}
+    private mailService: MailService,
+  ) { }
+
+  async sendCodeSMS(phone: string) {
+    const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
+    this.verifyCodeRepository.upsert(
+      {
+        phone,
+        code: verifyCode,
+      },
+      ['phone'],
+    );
+    /** TODO: send SMS */
+    return new SuccessResponse(verifyCode); // Return code for test, change latter
+  }
 
   async register(payload: SignUpDto) {
     if (payload.password !== payload.confirmPassword)
@@ -41,7 +60,6 @@ export class AuthService {
     const salt = bcrypt.genSaltSync();
     const hashedPassword = bcrypt.hashSync(payload.password, salt);
     try {
-      const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
       // insert new-user or update pending-user
       let record = await this.userRepository.findOne({
         phone: payload.phone,
@@ -49,6 +67,8 @@ export class AuthService {
       if (record && record.status !== AccountStatus.PENDING)
         return new DuplicateResponse({ phone: payload.phone });
       if (record) {
+        if (record?.status !== AccountStatus.PENDING)
+          return new DuplicateResponse({ phone: payload.phone });
         record.password = hashedPassword;
         this.userRepository.save(record);
       } else {
@@ -57,16 +77,8 @@ export class AuthService {
           password: hashedPassword,
         });
       }
-      this.verifyCodeRepository.upsert(
-        {
-          phone: payload.phone,
-          code: verifyCode,
-        },
-        ['phone'],
-      );
-      /** TODO: send SMS */
 
-      return new SuccessResponse({ verifyCode }); // Return code for test, change latter
+      return this.sendCodeSMS(payload.phone);
     } catch (error) {
       console.log(error);
       return new InternalErrorResponse(payload);
@@ -101,6 +113,24 @@ export class AuthService {
     }
   }
 
+  async sendCodeEmail(email: string) {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    this.verifyCodeRepository.upsert(
+      {
+        email,
+        code,
+      },
+      ['email'],
+    );
+    try {
+      this.mailService.sendVerifyCode(email, code);
+      return new SuccessResponse({ code }); // Return code for test, change latter
+    } catch(error) {
+      console.log(error);
+      return new InternalErrorResponse();
+    }
+  }
+
   async registerEmail(userId: number, email: string) {
     try {
       await this.userRepository.update(
@@ -111,15 +141,7 @@ export class AuthService {
         },
       );
 
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      this.verifyCodeRepository.upsert(
-        {
-          email,
-          code,
-        },
-        ['email'],
-      );
-      return new SuccessResponse({ verify_code: code }); // Return code for test, change latter
+      return this.sendCodeEmail(email);
     } catch (error) {
       // console.log(error)
       if (error.code === 'ER_DUP_ENTRY')
@@ -151,8 +173,13 @@ export class AuthService {
       if (now < resendTime) return new AuthFailResponse({ message: 'Wait' });
       record.code = Math.floor(100000 + Math.random() * 900000).toString();
       this.verifyCodeRepository.save(record);
-      /** TODO: send Email */
-      return new SuccessResponse({ verifyCode: record.code });
+      try {
+        this.mailService.sendVerifyCode(email, record.code);
+        return new SuccessResponse({ message: record.code }); // Return code for test, change latter
+      } catch(error) {
+        console.log(error);
+        return new InternalErrorResponse();
+      }
     }
   }
 
@@ -177,5 +204,80 @@ export class AuthService {
       return new SuccessResponse({ accessToken });
     }
     return new AuthFailResponse({ message: 'Wrong password' });
+  }
+
+  isPhoneNumber(value: string) {
+    return /^[0-9\-\+]{9,15}$/.test(value);
+  }
+
+  isEmail(value: string) {
+    return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,5})+$/.test(value);
+  }
+  
+  async forgotPassword(identity: string) {
+    if (identity != null) {
+      const user = await this.userRepository.findOne({
+        where: [{ phone: identity }, { email: identity }],
+      });
+
+      if (!user) return new AuthFailResponse({ message: 'Not Exist' });
+      if (user.status === AccountStatus.BLOCK)
+        return new AuthFailResponse({ message: 'Blocked' });
+
+      if(this.isPhoneNumber(identity)) {
+        return this.sendCodeSMS(identity);
+      } else if(this.isEmail(identity)) {
+        return this.sendCodeEmail(identity);
+      }
+    }
+
+    return new WrongInputResponse({
+      message: 'Please type at least your phone number or email',
+    });
+  }
+
+  async updatePassword(user: UserEntity, password: string) {
+    const salt = bcrypt.genSaltSync();
+    const hashedPassword = bcrypt.hashSync(password, salt);
+    user.password = hashedPassword;
+    this.userRepository.save(user);
+    return new SuccessResponse();
+  }
+
+  async resetPassword(payload: ResetPasswordDto) {
+    if (payload.password != payload.confirmPassword)
+      return new WrongInputResponse({ message: 'Password and confirmPassword do not match' });
+
+    if (payload.identity != null) {
+      const record = await this.verifyCodeRepository.findOne({
+        where: [{ phone: payload.identity }, { email: payload.identity }],
+      });
+
+      if (record) {
+        if (record.code == payload.code) {
+          const user = await this.userRepository.findOne({
+            where: [{ phone: payload.identity }, { email: payload.identity }],
+          });
+          return await this.updatePassword(user, payload.password);
+        }
+      } else {
+        return new NotFoundResponse({ message: payload.identity });
+      }
+    }
+
+    return new WrongInputResponse('Please type at least your email or phone number and its respective code');
+  }
+
+  async changePassword(userId: number, payload: ChangePasswordDto) {
+    if (payload.newPassword !== payload.confirmPassword)
+      return new WrongInputResponse({ message: 'Password and confirmPassword do not match' });
+
+    const user = await this.userRepository.findOne(userId);
+
+    if (await bcrypt.compare(payload.oldPassword, user.password)) {
+      return await this.updatePassword(user, payload.newPassword);
+    } else {
+      return new WrongInputResponse({ message: 'Current password does not match' });
+    }
   }
 }

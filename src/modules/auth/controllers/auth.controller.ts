@@ -7,10 +7,12 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from 'src/common/user.decorator';
+import { ResetPasswordDto } from '../dtos/reset-pass.dto';
+import { ChangePasswordDto } from '../dtos/change-password.dto';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   /** Normal user need to register via phone */
   @Post('sign-up')
@@ -54,17 +56,16 @@ export class AuthController {
 
   /** Send sms/email verification code */
   @Post('password/forgot')
-  async forgotPassword() {
-
+  async forgotPassword(@Body() payload: ResetPasswordDto) {
+    return await this.authService.forgotPassword(payload.identity);
   }
 
   /** Verify code from client
    *  Change password
-   * @Body: verifyCode, password, confirmPassword
    */
   @Post('password/reset')
-  async resetPassword(){
-
+  async resetPassword(@Body() payload: ResetPasswordDto) {
+    return await this.authService.resetPassword(payload);
   }
 
   /** User change password
@@ -73,7 +74,10 @@ export class AuthController {
   @UseGuards(AuthGuard())
   @ApiBearerAuth()
   @Post('password/change')
-  async changePassword() {
-    
+  async changePassword(
+    @CurrentUser() user: UserEntity,
+    @Body() payload: ChangePasswordDto
+  ) { 
+    return await this.authService.changePassword(user.id, payload);
   }
 }
