@@ -122,13 +122,9 @@ export class AuthService {
       },
       ['email'],
     );
-    try {
-      this.mailService.sendVerifyCode(email, code);
-      return new SuccessResponse({ code }); // Return code for test, change latter
-    } catch(error) {
-      console.log(error);
-      return new InternalErrorResponse();
-    }
+    this.mailService.sendVerifyCode(email, code);
+    return new SuccessResponse({ code }); // Return code for test, change latter
+   
   }
 
   async registerEmail(userId: number, email: string) {
@@ -140,7 +136,6 @@ export class AuthService {
           email_verified: false,
         },
       );
-
       return this.sendCodeEmail(email);
     } catch (error) {
       // console.log(error)
@@ -173,13 +168,8 @@ export class AuthService {
       if (now < resendTime) return new AuthFailResponse({ message: 'Wait' });
       record.code = Math.floor(100000 + Math.random() * 900000).toString();
       this.verifyCodeRepository.save(record);
-      try {
-        this.mailService.sendVerifyCode(email, record.code);
-        return new SuccessResponse({ message: record.code }); // Return code for test, change latter
-      } catch(error) {
-        console.log(error);
-        return new InternalErrorResponse();
-      }
+      this.mailService.sendVerifyCode(email, record.code);
+      return new SuccessResponse({ message: record.code }); // Return code for test, change latter
     }
   }
 
