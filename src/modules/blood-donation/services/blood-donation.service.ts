@@ -1,3 +1,4 @@
+import { MailService } from 'src/modules/mail/services/mail.service';
 import { BloodRequestEntity } from './../entities/blood-request.entity';
 import { ConfigService } from '@nestjs/config';
 import { UserEntity, UserRole } from './../../user/entities/user.entity';
@@ -16,6 +17,7 @@ import {
   BloodRequestMapperEntity,
   DonateStatus,
 } from '../entities/blood-request-mapper.entity';
+import { Cron } from '@nestjs/schedule';
 @Injectable()
 export class BloodDonationService {
   constructor(
@@ -29,7 +31,27 @@ export class BloodDonationService {
     private readonly requestRepository: Repository<BloodRequestEntity>,
 
     private readonly configService: ConfigService,
+    private readonly mailService: MailService
   ) {}
+  
+  @Cron('0 0 0 * * *')
+  async createQrCode() {
+    const today = new Date().toISOString().split('T')[0];
+    const bloodStations = await this.stationRepository.find();
+    bloodStations.forEach( item => {
+      const QrCode1 = jwt.sign(
+        { blood_station_id: item.id, volume: 300, date: today },
+        this.configService.get('QRCODE_PRIVATE_KEY'),
+      );
+      const QrCode2 = jwt.sign(
+        { blood_station_id: item.id, volume: 450, date: today },
+        this.configService.get('QRCODE_PRIVATE_KEY'),
+      );
+      this.mailService.sendQrCode(item.email, QrCode1, QrCode2)
+    })
+
+    return new SuccessResponse();
+  }
 
   async getDonations(user: UserEntity, id?: number) {
     if (id) return this.getOneById(user, id);
@@ -56,20 +78,6 @@ export class BloodDonationService {
     if (user.role === UserRole.USER || user.role === UserRole.HOSPITAL)
       return new AuthorizationProtectResponse();
     return new SuccessResponse(result);
-  }
-
-  async createQrCode() {
-    const today = new Date().toISOString().split('T')[0];
-    const QrCode1 = jwt.sign(
-      { blood_station_id: 1, volume: 300, date: today },
-      this.configService.get('QRCODE_PRIVATE_KEY'),
-    );
-    const QrCode2 = jwt.sign(
-      { blood_station_id: 1, volume: 450, date: today },
-      this.configService.get('QRCODE_PRIVATE_KEY'),
-    );
-    /** TODO: send mail QrCode */
-    return new SuccessResponse({ QrCode1, QrCode2 });
   }
 
   async verifyDonation(userId: number, requestId: number, code: string) {

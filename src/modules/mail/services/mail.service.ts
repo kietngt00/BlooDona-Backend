@@ -6,12 +6,24 @@ export class MailService {
     constructor(private mailerService: MailerService) {}
     
     async sendVerifyCode(email: string, verifyCode: string) {
-        await this.mailerService.sendMail({
+        this.mailerService.sendMail({
             to: email,
             subject: 'Verify Code',
             template: 'signup.hbs',
             context: {
                 verifyCode
+            }
+        });
+    }
+
+    async sendQrCode(email: string, qrCode1: string, qrCode2: string) {
+        this.mailerService.sendMail({
+            to: email,
+            subject: 'Verify Code',
+            template: 'signup.hbs',
+            context: {
+                qrCode1,
+                qrCode2
             }
         });
     }
