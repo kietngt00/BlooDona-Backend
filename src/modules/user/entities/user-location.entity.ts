@@ -1,15 +1,14 @@
-import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { UserEntity } from "./user.entity";
 
-@Entity('blood_station')
-export class BloodStationEntity {
+@Entity('user_location')
+export class UserLocation {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
-  email: string;
-
-  @Column()
-  name: string;
+  @OneToOne(() => UserEntity, {})
+  @JoinColumn({ name: 'user_id' })
+  user_id: number;
 
   @Column({ type: 'varchar', length: 1024, nullable: true })
   location: string; // Ex: 78 Truong Dinh, Dong Da, Ha Noi
