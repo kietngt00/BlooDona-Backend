@@ -12,6 +12,7 @@ import config from './config';
 import { RequestMiddleware } from './request.middleware';
 import { MailModule } from './modules/mail/mail.module';
 import { BloodDonationModule } from './modules/blood-donation/blood-donation.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { BloodDonationModule } from './modules/blood-donation/blood-donation.mod
         // autoLoadEntities: true
       }),
     }),
+    ScheduleModule.forRoot(),
 
     UserModule,
     AuthModule,

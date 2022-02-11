@@ -9,6 +9,7 @@ import { BloodDonationService } from './services/blood-donation.service';
 import { BloodDonationEntity } from './entities/blood-donation.entity';
 import { BloodStationEntity } from './entities/blood-station.entity';
 import { BloodRequestService } from './services/blood-request.service';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { BloodRequestService } from './services/blood-request.service';
       BloodRequestEntity,
       BloodRequestMapperEntity,
     ]),
-    AuthModule
+    AuthModule,
+    MailModule
   ],
   controllers: [BloodDonationController, BloodRequestController],
   providers: [BloodDonationService, BloodRequestService],
