@@ -7,6 +7,7 @@ import {
 } from './../../../common/response.factory';
 import {
   BloodRequestEntity,
+  BloodType,
   UrgentLevel,
 } from './../entities/blood-request.entity';
 import { Inject, Injectable } from '@nestjs/common';
@@ -42,8 +43,7 @@ export class BloodRequestService {
         user_id: userId,
         active: true,
       }),
-      this.medicalRepository.findOne({ user_id: userId})
-
+      this.medicalRepository.findOne({ user_id: userId }),
     ]);
 
     if (activeRequest)
@@ -54,7 +54,7 @@ export class BloodRequestService {
       urgent_level: urgentLevel,
       expected_volume: volume,
       description,
-      blood_type: medicalInfo?.blood_type
+      blood_type: medicalInfo?.blood_type,
     });
 
     /** TODO: send request to blood hospital */
@@ -62,14 +62,23 @@ export class BloodRequestService {
     return new SuccessResponse();
   }
 
-  async sendToUsers(requestId: number) {
-    /** TODO: query users from medical_info */
+  async sendToUsers(
+    requestId: number,
+    numberPeople: number,
+    bloodType: BloodType,
+  ) {
+    const pushUsers = await this.medicalRepository.find({
+       take: numberPeople, 
+       where: {
+         blood_type: bloodType,
+         can_donate: true
+       }
+      }
+    );
 
-    // hardcode data
-    const pushUserIds = [1];
-    const mapperEntities = pushUserIds.map((user_id) => {
+    const mapperEntities = pushUsers.map((item) => {
       return this.mapperRepository.create({
-        user_id,
+        user_id: item.user_id,
         blood_request_id: requestId,
       });
     });
