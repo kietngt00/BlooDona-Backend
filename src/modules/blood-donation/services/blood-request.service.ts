@@ -1,3 +1,4 @@
+import { UserMedicalEntity } from './../../user/entities/user-medical.entity';
 import {
   DuplicateResponse,
   InternalErrorResponse,
@@ -6,9 +7,10 @@ import {
 } from './../../../common/response.factory';
 import {
   BloodRequestEntity,
+  BloodType,
   UrgentLevel,
 } from './../entities/blood-request.entity';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
@@ -26,6 +28,8 @@ export class BloodRequestService {
     private readonly mapperRepository: Repository<BloodRequestMapperEntity>,
     @InjectRepository(BloodStationEntity)
     private readonly stationEntity: Repository<BloodStationEntity>,
+    @InjectRepository(UserMedicalEntity)
+    private readonly medicalRepository: Repository<UserMedicalEntity>,
   ) {}
 
   async createRequest(
@@ -34,20 +38,23 @@ export class BloodRequestService {
     volume: number,
     description: string,
   ) {
-    const activeRequest = await this.requestRepository.findOne({
-      user_id: userId,
-      active: true,
-    });
+    const [activeRequest, medicalInfo] = await Promise.all([
+      this.requestRepository.findOne({
+        user_id: userId,
+        active: true,
+      }),
+      this.medicalRepository.findOne({ user_id: userId }),
+    ]);
+
     if (activeRequest)
       return new DuplicateResponse({ message: 'blood_request' });
 
-    /** TODO: query user blood type */
     this.requestRepository.insert({
       user_id: userId,
       urgent_level: urgentLevel,
       expected_volume: volume,
       description,
-      // Blood type
+      blood_type: medicalInfo?.blood_type,
     });
 
     /** TODO: send request to blood hospital */
@@ -55,14 +62,23 @@ export class BloodRequestService {
     return new SuccessResponse();
   }
 
-  async sendToUsers(requestId: number) {
-    /** TODO: query users from medical_info */
+  async sendToUsers(
+    requestId: number,
+    numberPeople: number,
+    bloodType: BloodType,
+  ) {
+    const pushUsers = await this.medicalRepository.find({
+       take: numberPeople, 
+       where: {
+         blood_type: bloodType,
+         can_donate: true
+       }
+      }
+    );
 
-    // hardcode data
-    const pushUserIds = [1];
-    const mapperEntities = pushUserIds.map((user_id) => {
+    const mapperEntities = pushUsers.map((item) => {
       return this.mapperRepository.create({
-        user_id,
+        user_id: item.user_id,
         blood_request_id: requestId,
       });
     });

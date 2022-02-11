@@ -1,3 +1,4 @@
+import { UserModule } from './../user/user.module';
 import { AuthModule } from './../auth/auth.module';
 import { BloodRequestController } from './controllers/blood-request.controller';
 import { BloodRequestMapperEntity } from './entities/blood-request-mapper.entity';
@@ -20,7 +21,8 @@ import { MailModule } from '../mail/mail.module';
       BloodRequestMapperEntity,
     ]),
     AuthModule,
-    MailModule
+    MailModule,
+    UserModule
   ],
   controllers: [BloodDonationController, BloodRequestController],
   providers: [BloodDonationService, BloodRequestService],

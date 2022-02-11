@@ -43,7 +43,11 @@ export class BloodRequestController {
   /** @description Blood Hospital send received request to other users */
   @Post('send-to-user')
   async sendToUser(@Body() payload: SendRequestDto) {
-    return await this.bloodRequestService.sendToUsers(payload.requestId);
+    return await this.bloodRequestService.sendToUsers(
+      payload.requestId,
+      payload.numberPeople,
+      payload.bloodType,
+    );
   }
 
   @Post('response')

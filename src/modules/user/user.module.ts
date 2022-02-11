@@ -1,6 +1,6 @@
-import { UserMedical } from './entities/user-medical.entity';
-import { UserLocation } from './entities/user-location.entity';
-import { UserInfo } from './entities/user-info.entity';
+import { UserMedicalEntity } from './entities/user-medical.entity';
+import { UserLocationEntity } from './entities/user-location.entity';
+import { UserInfoEntity } from './entities/user-info.entity';
 import { AuthModule } from './../auth/auth.module';
 import { PassportModule } from '@nestjs/passport';
 import { Module } from '@nestjs/common';
@@ -11,7 +11,12 @@ import { UserService } from './services/user.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, UserInfo, UserLocation, UserMedical]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      UserInfoEntity,
+      UserLocationEntity,
+      UserMedicalEntity,
+    ]),
     AuthModule,
   ],
   controllers: [UserController],

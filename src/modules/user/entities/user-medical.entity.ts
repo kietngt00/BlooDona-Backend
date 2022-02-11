@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "ty
 import { UserEntity } from "./user.entity";
 
 @Entity('user_medical')
-export class UserMedical {
+export class UserMedicalEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
