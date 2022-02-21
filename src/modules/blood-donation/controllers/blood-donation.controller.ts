@@ -1,3 +1,4 @@
+import { AdminGuard } from './../../../guards/admin.guard';
 import { VerifyDonationDto } from './../dtos/blood-donation.dto';
 import { UserEntity } from './../../user/entities/user.entity';
 import { BloodDonationService } from './../services/blood-donation.service';
@@ -20,8 +21,8 @@ export class BloodDonationController {
     return await this.service.getDonations(user, donationId);
   }
 
-  // Admin Guard
   /** @description Admin manually send qr-code to blood station if the cron job does not work */
+  @UseGuards(AdminGuard)
   @Post('qr-code')
   async createQrCode() {
     return await this.service.createQrCode();

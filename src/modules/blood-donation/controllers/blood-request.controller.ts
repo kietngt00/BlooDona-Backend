@@ -18,6 +18,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { BloodRequestService } from '../services/blood-request.service';
 import { CurrentUser } from 'src/common/user.decorator';
+import { BloodHospitalGuard } from 'src/guards/blood-hospital.guard';
 
 @UseGuards(AuthGuard())
 @ApiBearerAuth()
@@ -39,8 +40,8 @@ export class BloodRequestController {
     );
   }
 
-  // BloodHospital Guard
   /** @description Blood Hospital send received request to other users */
+  @UseGuards(BloodHospitalGuard)
   @Post('send-to-user')
   async sendToUser(@Body() payload: SendRequestDto) {
     return await this.bloodRequestService.sendToUsers(
@@ -76,8 +77,8 @@ export class BloodRequestController {
     return await this.bloodRequestService.inactiveRequest(user.id);
   }
 
-  // BloodHospital Guard
   /** @description Blood Hospital edit blood request */
+  @UseGuards(BloodHospitalGuard)
   @Put()
   async editRequest(
     @Query('request_id') requestId: number,
