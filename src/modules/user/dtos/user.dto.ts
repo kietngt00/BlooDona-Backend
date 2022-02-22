@@ -1,4 +1,6 @@
+import { APP_FILTER } from "@nestjs/core";
 import { ApiProperty } from "@nestjs/swagger";
+import { BloodType } from "src/modules/blood-donation/entities/blood-request.entity";
 import { Gender } from "../entities/user-info.entity";
 
 export class UserInfoDto {
@@ -30,4 +32,12 @@ export class UserLocationDto {
 
   @ApiProperty()
   longitude: number;
+}
+
+export class UserMedicalDto {
+  @ApiProperty({ enum: BloodType})
+  blood_type: BloodType;
+
+  @ApiProperty()
+  test_paper: number;
 }

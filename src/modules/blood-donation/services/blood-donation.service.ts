@@ -1,3 +1,4 @@
+import { UserMedicalEntity } from './../../user/entities/user-medical.entity';
 import { MailService } from 'src/modules/mail/services/mail.service';
 import { BloodRequestEntity } from './../entities/blood-request.entity';
 import { ConfigService } from '@nestjs/config';
@@ -29,16 +30,18 @@ export class BloodDonationService {
     private readonly mapperRepository: Repository<BloodRequestMapperEntity>,
     @InjectRepository(BloodRequestEntity)
     private readonly requestRepository: Repository<BloodRequestEntity>,
+    @InjectRepository(UserMedicalEntity)
+    private readonly medicalRepository: Repository<UserMedicalEntity>,
 
     private readonly configService: ConfigService,
-    private readonly mailService: MailService
+    private readonly mailService: MailService,
   ) {}
-  
+
   @Cron('0 0 0 * * *')
   async createQrCode() {
     const today = new Date().toISOString().split('T')[0];
     const bloodStations = await this.stationRepository.find();
-    bloodStations.forEach( item => {
+    bloodStations.forEach((item) => {
       const QrCode1 = jwt.sign(
         { blood_station_id: item.id, volume: 300, date: today },
         this.configService.get('QRCODE_PRIVATE_KEY'),
@@ -47,8 +50,8 @@ export class BloodDonationService {
         { blood_station_id: item.id, volume: 450, date: today },
         this.configService.get('QRCODE_PRIVATE_KEY'),
       );
-      this.mailService.sendQrCode(item.email, QrCode1, QrCode2)
-    })
+      this.mailService.sendQrCode(item.email, QrCode1, QrCode2);
+    });
 
     return new SuccessResponse();
   }
@@ -86,7 +89,7 @@ export class BloodDonationService {
       code,
       this.configService.get('QRCODE_PRIVATE_KEY'),
     )) as { blood_station_id: number; volume: number; date: Date };
-    
+
     // Find request, update request mapper
     const [request, updateMapperResult] = await Promise.all([
       this.requestRepository.findOne({
@@ -119,6 +122,12 @@ export class BloodDonationService {
       blood_station_id: payload.blood_station_id,
       date: new Date(),
     });
+
+    // Update medical info
+    this.medicalRepository.update(
+      { user_id: userId },
+      { last_donation: payload.date },
+    );
 
     return new SuccessResponse();
   }

@@ -19,4 +19,7 @@ export class UserMedicalEntity {
 
   @Column({ nullable: true })
   test_paper: number // TODO: set relation to file table
+
+  @Column({ nullable: false })
+  last_donation: Date;
 }
