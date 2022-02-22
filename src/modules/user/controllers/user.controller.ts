@@ -1,4 +1,5 @@
-import { UserInfoDto } from './../dtos/user-info.dto';
+import { UserLocationDto } from './../dtos/user.dto';
+import { UserInfoDto } from '../dtos/user.dto';
 import { UserService } from './../services/user.service';
 import { UserEntity } from './../entities/user.entity';
 import { Body, Controller, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
@@ -27,5 +28,21 @@ export class UserController {
   @Get('info/:id')
   async hospitalGetUserInfo(@Param('id') id: number){
     return await this.service.hospitalGetUserInfo(id);
+  }
+
+  @Get('location')
+  async getUserLocation(@CurrentUser() user: UserEntity){
+    return await this.service.getUserLocation(user.id);
+  }
+
+  @Put('location')
+  async editUserLocation(@CurrentUser() user: UserEntity, @Body() payload: UserLocationDto){
+    return await this.service.editUserLocation(user.id, payload)
+  }
+
+  @UseGuards(BloodHospitalGuard)
+  @Get('location/:id')
+  async hospitalGetUserLocation(@Param('id') id: number){
+    return await this.service.getUserLocation(id);
   }
 }

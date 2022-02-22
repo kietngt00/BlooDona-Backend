@@ -1,4 +1,5 @@
-import { UserInfoDto } from './../dtos/user-info.dto';
+import { UserLocationDto } from './../dtos/user.dto';
+import { UserInfoDto } from '../dtos/user.dto';
 import {
   NotFoundResponse,
   SuccessResponse,
@@ -23,7 +24,12 @@ export class UserService {
 
   async getUserInfo(user: UserEntity) {
     const info = await this.infoRepository.findOne({ user_id: user.id });
-    if (!info) return new SuccessResponse({ user_id: user.id, email: user.email, phone: user.phone });
+    if (!info)
+      return new SuccessResponse({
+        user_id: user.id,
+        email: user.email,
+        phone: user.phone,
+      });
     return new SuccessResponse({
       ...info,
       email: user.email,
@@ -38,8 +44,6 @@ export class UserService {
         user_id: user.id,
         ...payload,
       });
-      console.log(record)
-      console.log(payload)
       this.infoRepository.save(record);
       return new SuccessResponse({
         ...record,
@@ -59,13 +63,45 @@ export class UserService {
     }
   }
 
-  async hospitalGetUserInfo(id: number){
+  async hospitalGetUserInfo(id: number) {
     const [user, info] = await Promise.all([
       this.userRepository.findOne(id),
-      this.infoRepository.findOne({ user_id: id })
+      this.infoRepository.findOne({ user_id: id }),
     ]);
-    if(!info) return new NotFoundResponse({message: "user"});
-    if (!info) return new SuccessResponse({ user_id: id, email: user.email, phone: user.phone });
-    return new SuccessResponse({...info, email: user.email, phone: user.phone });
+    if (!info) return new NotFoundResponse({ message: 'user' });
+    if (!info)
+      return new SuccessResponse({
+        user_id: id,
+        email: user.email,
+        phone: user.phone,
+      });
+    return new SuccessResponse({
+      ...info,
+      email: user.email,
+      phone: user.phone,
+    });
   }
+
+  async getUserLocation(id: number) {
+    const location = await this.locationRepository.findOne({ user_id: id });
+    if (!location) return new NotFoundResponse({ message: 'location' });
+    return new SuccessResponse(location);
+  }
+
+  async editUserLocation(id: number, payload: UserLocationDto) {
+    const location = await this.locationRepository.findOne({ user_id: id });
+    if (!location)
+      this.locationRepository.insert({
+        user_id: id,
+        ...payload,
+      });
+    else
+      this.locationRepository.save({
+        id: location.id,
+        user_id: id,
+        ...payload,
+      });
+    return new SuccessResponse();
+  }
+  
 }
