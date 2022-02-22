@@ -1,4 +1,5 @@
-import { UserLocationDto } from './../dtos/user.dto';
+import { UserMedicalEntity } from './../entities/user-medical.entity';
+import { UserLocationDto, UserMedicalDto } from './../dtos/user.dto';
 import { UserInfoDto } from '../dtos/user.dto';
 import {
   NotFoundResponse,
@@ -20,6 +21,8 @@ export class UserService {
     private readonly infoRepository: Repository<UserInfoEntity>,
     @InjectRepository(UserLocationEntity)
     private readonly locationRepository: Repository<UserLocationEntity>,
+    @InjectRepository(UserMedicalEntity)
+    private readonly medicalRepository: Repository<UserMedicalEntity>
   ) {}
 
   async getUserInfo(user: UserEntity) {
@@ -104,4 +107,46 @@ export class UserService {
     return new SuccessResponse();
   }
   
+  async getMedicalInfo(id: number) {
+    const medicalInfo = await this.medicalRepository.findOne({user_id: id});
+    if(medicalInfo) {
+      return new SuccessResponse(medicalInfo);
+    }
+    const result = this.medicalRepository.create({
+      user_id: id,
+    })
+    this.userRepository.save(result);
+    return new SuccessResponse(result)
+  }
+
+  async editMedicalInfo(id: number,  payload: UserMedicalDto) {
+    const medicalInfo = await this.medicalRepository.findOne({ user_id: id });
+    if(!medicalInfo)
+      this.medicalRepository.insert({
+        user_id: id,
+        ...payload
+      });
+    else 
+      this.medicalRepository.save({
+        id: medicalInfo.id,
+        user_id: id,
+        ...payload
+      })
+    return new SuccessResponse();
+  }
+
+  async editCanDonate(id: number) {
+    const medicalInfo = await this.medicalRepository.findOne({ user_id: id });
+    if(!medicalInfo) return new NotFoundResponse({ message: "medical" });
+    if(medicalInfo.can_donate) medicalInfo.can_donate = false;
+    else {
+      const now = new Date()
+      if(medicalInfo.last_donation) {
+        const diffDays = (now.getTime() - medicalInfo.last_donation.getTime()) / (1000 * 3600 * 24);
+        if(diffDays > 120) medicalInfo.can_donate = true;
+      }
+    }
+    this.medicalRepository.save(medicalInfo)
+    return new SuccessResponse({ can_donate: medicalInfo.can_donate });
+  }
 }

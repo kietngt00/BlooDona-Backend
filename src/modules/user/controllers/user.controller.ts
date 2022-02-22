@@ -1,4 +1,4 @@
-import { UserLocationDto } from './../dtos/user.dto';
+import { UserLocationDto, UserMedicalDto } from './../dtos/user.dto';
 import { UserInfoDto } from '../dtos/user.dto';
 import { UserService } from './../services/user.service';
 import { UserEntity } from './../entities/user.entity';
@@ -44,5 +44,26 @@ export class UserController {
   @Get('location/:id')
   async hospitalGetUserLocation(@Param('id') id: number){
     return await this.service.getUserLocation(id);
+  }
+
+  @Get('medical')
+  async getUserMedical(@CurrentUser() user: UserEntity){
+    return await this.service.getMedicalInfo(user.id);
+  }
+
+  @Put('medical')
+  async editUserMedical(@CurrentUser() user: UserEntity, @Body() payload: UserMedicalDto){
+    return await this.service.editMedicalInfo(user.id, payload);
+  }
+
+  @Put('medical/can-donate')
+  async editCanDonate(@CurrentUser() user: UserEntity) {
+    return await this.service.editCanDonate(user.id);
+  }
+
+  @UseGuards(BloodHospitalGuard)
+  @Get('medical/:id')
+  async hospitalGetUserMedical(@Param('id') id: number){
+    return await this.service.getMedicalInfo(id);
   }
 }
