@@ -10,6 +10,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import config from './config';
 import { RequestMiddleware } from './request.middleware';
+import { MailModule } from './modules/mail/mail.module';
+import { BloodDonationModule } from './modules/blood-donation/blood-donation.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -32,9 +35,12 @@ import { RequestMiddleware } from './request.middleware';
         // autoLoadEntities: true
       }),
     }),
+    ScheduleModule.forRoot(),
 
     UserModule,
     AuthModule,
+    MailModule,
+    BloodDonationModule,
   ],
   controllers: [AppController, UserController, AuthController],
   providers: [AppService, AuthService],

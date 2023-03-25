@@ -14,11 +14,11 @@ export enum SocialLogin {
 }
 
 export enum UserRole {
-  USER,
-  HOSPITAL,
-  BLOOD_HOSPITAL,
-  MODERATOR,
-  ADMIN,
+  USER = 'user',
+  HOSPITAL = 'hospital',
+  BLOOD_HOSPITAL = 'blood_hospital',
+  MODERATOR = 'moderator',
+  ADMIN = 'admin',
 }
 
 export enum AccountStatus {
@@ -53,6 +53,9 @@ export class UserEntity {
 
   @Column({ type: 'enum', enum: AccountStatus, default: AccountStatus.PENDING })
   status: AccountStatus;
+  
+  @Column({ default: false })
+  email_verified: boolean;
 
   @CreateDateColumn()
   created_at: Date;

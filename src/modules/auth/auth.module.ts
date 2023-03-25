@@ -8,9 +8,11 @@ import { AuthService } from './services/auth.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { MailModule } from '../mail/mail.module';
 
 @Module({
   imports: [
+    MailModule,
     ConfigModule,
     TypeOrmModule.forFeature([VerifyCodeEntity, UserEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -20,7 +22,7 @@ import { JwtModule } from '@nestjs/jwt';
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('jwt.secret'),
         signOptions: {
-          expiresIn: configService.get('jwt.expiredTime'),
+          expiresIn: configService.get<string>('jwt.expiredTime'),
         },
       }),
     }),
